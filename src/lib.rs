@@ -84,7 +84,7 @@ impl PublicKey {
     /// Returns `None` if it couldn't parse the provided data
     pub fn from_vec(vec: Vec<u8>, algorithm: &'static Algorithm) -> Option<PublicKey> {
         let size = vec.len();
-        let hash_output_size = algorithm.output_len;
+        let hash_output_size = algorithm.output_len();
         if size != (hash_output_size * hash_output_size * 8 * 2) {
             return None;
         }
@@ -134,7 +134,7 @@ impl PublicKey {
 
     /// Verifies that the signature of the data is correctly signed with the given key
     pub fn verify_signature(&self, signature: &[Vec<u8>], data: &[u8]) -> bool {
-        if signature.len() != self.algorithm.output_len * 8 {
+        if signature.len() != self.algorithm.output_len() * 8 {
             return false;
         }
 
@@ -176,8 +176,8 @@ impl PrivateKey {
         let generate_bit_hash_values = || -> Vec<Vec<u8>> {
             let rng = SystemRandom::new();
 
-            let buffer_byte = vec![0u8; algorithm.output_len];
-            let mut buffer = vec![buffer_byte; algorithm.output_len * 8];
+            let buffer_byte = vec![0u8; algorithm.output_len()];
+            let mut buffer = vec![buffer_byte; algorithm.output_len() * 8];
 
             for hash in &mut buffer {
                 rng.fill(hash)
@@ -201,10 +201,10 @@ impl PrivateKey {
     /// Returns the public key associated with this private key
     pub fn public_key(&self) -> PublicKey {
         let hash_values = |x: &Vec<Vec<u8>>| -> Vec<Vec<u8>> {
-            let buffer_byte = vec![0u8; self.algorithm.output_len];
-            let mut buffer = vec![buffer_byte; self.algorithm.output_len * 8];
+            let buffer_byte = vec![0u8; self.algorithm.output_len()];
+            let mut buffer = vec![buffer_byte; self.algorithm.output_len() * 8];
 
-            for i in 0..self.algorithm.output_len * 8 {
+            for i in 0..self.algorithm.output_len() * 8 {
                 let mut context = Context::new(self.algorithm);
                 context.update(x[i].as_slice());
                 buffer[i] = Vec::from(context.finish().as_ref());
